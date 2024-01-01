@@ -11,7 +11,7 @@ declare -a ports="$3"
 declare -a tunnels="$4"
 
 function create_tunnel() {
-    ssh -$1 -o PasswordAuthentication=no -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -N -L $ssh_lock_port:localhost:22 -R $4:localhost:22 -p "$3" "$ssh_user@$2"
+    ssh -$1 -C -o PasswordAuthentication=no -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null -N -L $ssh_lock_port:localhost:22 -R $4:localhost:22 -p "$3" "$ssh_user@$2"
 }
 
 function connect() {
