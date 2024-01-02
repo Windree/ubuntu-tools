@@ -17,4 +17,4 @@ echo "Memory usage:" $(get_memory_usage)
 
 echo "Temperature:"
 echo "CPU: $(sensors | grep -A3 -P '^cpu' | grep -P '^temp1:' | awk '{print "CPU:", $2}')"
-echo "HDD: $(smartctl --all /dev/sda | grep -F "Temperature_Celsius" | awk '{print "+", $10, ".0°C"}')"
+echo "HDD: $(smartctl --all /dev/sda | grep -F "Temperature_Celsius" | awk '{print "+",$10,".0°C"}')"
