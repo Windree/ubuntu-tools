@@ -4,47 +4,52 @@ set -Eeuo pipefail
 
 tmp=$(mktemp -d)
 
-function main(){
-	git clone git@gitee.com:windree/ubuntu-config.git "$tmp"  > /dev/null  2>/dev/null
-	crontab -l > "$tmp/crontab.txt"
+git=$1
+shift
+attribute=$1
+shift
+declare -a paths=("$@")
 
-	mkdir -p "$tmp/media/app/mutt"
-	cp -a "/media/app/mutt/.env" "$tmp/media/app/mutt/"
-
-	mkdir -p "$tmp/etc/"
-	cp -a "/etc/fstab" "$tmp/etc/"
-
-	mkdir -p "$tmp/etc/docker"
-	cp -a "/etc/docker/daemon.json" "$tmp/etc/docker/"
-		
-	mkdir -p "$tmp/home/"
-	mkdir -p "$tmp/home/tunnel/.ssh"
-	mkdir -p "$tmp/home/.ssh"
-	mkdir -p "$tmp/media/app/ubuntu-tools/"
-	
-	cp -a $HOME/.bash_aliases "$tmp/home/"
-	cp -a $HOME/cifs.*.conf "$tmp/home/"
-	cp -a $HOME/.ssh/authorized_keys "$tmp/home/.ssh/"
-	cp -a /home/tunnel/.ssh/authorized_keys "$tmp/home/tunnel/.ssh/"
-	cp -a /media/app/ubuntu-tools/*.sh.env "$tmp/media/app/ubuntu-tools/"
+function main() {
+	git clone "$git" "$tmp" >/dev/null 2>/dev/null
+	echo "Cleanup"
+	find "$tmp" -type f -not -path '*/.git/*' -exec rm {} \;
+	echo "Backup crontab"
+	crontab -l >"$tmp/crontab.txt"
+	local list="$(get_list)"
+	echo "Backup files:"
+	echo "$list"
+	echo "$list" | backup "$tmp"
 
 	local status=$(git -C "$tmp" status -s)
-	if [[ -z "$status" ]]; then 
+	if [[ -z "$status" ]]; then
 		exit
 	fi
 	git -C "$tmp" status -s
-	git -C "$tmp" add . > /dev/null
-	git -C "$tmp" commit -m "$(date)" > /dev/null
+	git -C "$tmp" add . >/dev/null
+	git -C "$tmp" commit -m "$(date)" >/dev/null
 	git -C "$tmp" push
 }
 
-function cleanup(){
+function get_list() {
+	find "${paths[@]}" -type f -print0 | xargs -0 xattr | grep -oP "^.+(?=: $attribute$)" | xargs realpath
+}
+
+function backup() {
+	while read -r path; do
+		local target="$1/$path"
+		mkdir -p "$(dirname "$target")"
+		cp -ar "$path" "$target"
+	done
+}
+
+function cleanup() {
 	if [ -d "$tmp" ] && ! rm -rf "$tmp"; then
 		echo "Can't delete temp directory"
 		exit 1
 	fi
 }
 
-trap "cleanup" EXIT
+trap cleanup EXIT
 
 main
