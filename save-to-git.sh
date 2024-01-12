@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-set -Eeuo pipefail
+set -Eeuxo pipefail
 
 tmp=$(mktemp -d)
 
@@ -44,11 +44,11 @@ function backup() {
 }
 
 function validate() {
-	if ! which git; then
+	if ! which git >/dev/null; then
 		echo "git not installed"
 		return 1
 	fi
-	if ! which xattr; then
+	if ! which xattr >/dev/null; then
 		echo "xattr not installed"
 		return 1
 	fi
