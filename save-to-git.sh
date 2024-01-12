@@ -43,6 +43,17 @@ function backup() {
 	done
 }
 
+function validate() {
+	if ! which git; then
+		echo "git not installed"
+		return 1
+	fi
+	if ! which xattr; then
+		echo "xattr not installed"
+		return 1
+	fi
+}
+
 function cleanup() {
 	if [ -d "$tmp" ] && ! rm -rf "$tmp"; then
 		echo "Can't delete temp directory"
@@ -52,4 +63,5 @@ function cleanup() {
 
 trap cleanup EXIT
 
+validate
 main
