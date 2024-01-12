@@ -32,7 +32,7 @@ function main() {
 }
 
 function get_list() {
-	find "${paths[@]}" -type f -print0 | xargs -0 xattr | grep -oP "^.+(?=: $attribute$)" | xargs realpath
+	find "${paths[@]}" -type f -print0 | xargs -0 -n 1 xattr | grep -oP "^.+(?=: $attribute$)" | xargs realpath
 }
 
 function backup() {
