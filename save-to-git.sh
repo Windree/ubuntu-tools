@@ -14,8 +14,10 @@ function main() {
 	git clone "$git" "$tmp" >/dev/null 2>/dev/null
 	echo "Cleanup"
 	find "$tmp" -type f -not -path '*/.git/*' -exec rm {} \;
-	echo "Backup crontab"
-	crontab -l >"$tmp/crontab.txt"
+	if which crontab >/dev/null; then
+		echo "Backup crontab"
+		crontab -l >"$tmp/crontab.txt"
+	fi
 	local list="$(get_list | sort)"
 	echo "Backup files:"
 	echo "$list"
@@ -25,7 +27,7 @@ function main() {
 	if [[ -z "$status" ]]; then
 		exit
 	fi
-	git -C "$tmp" status -s
+	echo "$status"
 	git -C "$tmp" add . >/dev/null
 	git -C "$tmp" commit -m "$(date)" >/dev/null
 	git -C "$tmp" push
