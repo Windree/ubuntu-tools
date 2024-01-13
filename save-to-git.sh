@@ -21,7 +21,7 @@ function main() {
 	local list="$(get_list | sort)"
 	echo "Backup files:"
 	echo "$list"
-	echo "$list" | backup "$tmp"
+	echo -n "$list" | backup "$tmp"
 
 	local status=$(git -C "$tmp" status -s)
 	if [[ -z "$status" ]]; then
@@ -34,7 +34,7 @@ function main() {
 }
 
 function get_list() {
-	find "${paths[@]}" -type f | filter_attribute "$attribute" | xargs -n 1 realpath
+	find "${paths[@]}" -type f -exec realpath {} \; | filter_attribute "$attribute"
 }
 
 function filter_attribute() {
