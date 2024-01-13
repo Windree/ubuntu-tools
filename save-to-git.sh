@@ -1,6 +1,6 @@
 #!/bin/env bash
 
-set -Eeuxo pipefail
+set -Eeuo pipefail
 
 tmp=$(mktemp -d)
 
@@ -16,7 +16,7 @@ function main() {
 	find "$tmp" -type f -not -path '*/.git/*' -exec rm {} \;
 	echo "Backup crontab"
 	crontab -l >"$tmp/crontab.txt"
-	local list="$(get_list)"
+	local list="$(get_list | sort)"
 	echo "Backup files:"
 	echo "$list"
 	echo "$list" | backup "$tmp"
@@ -32,7 +32,15 @@ function main() {
 }
 
 function get_list() {
-	find "${paths[@]}" -type f -print0 | xargs -0 -n 1 xattr | grep -oP "^.+(?=: $attribute$)" | xargs realpath
+	find "${paths[@]}" -type f | filter_attribute "$attribute" | xargs -n 1 realpath
+}
+
+function filter_attribute() {
+	while read -r file; do
+		if getfattr --absolute-names --name "$1" "$file" 2>/dev/null >/dev/null; then
+			echo "$file"
+		fi
+	done
 }
 
 function backup() {
@@ -44,13 +52,18 @@ function backup() {
 }
 
 function validate() {
+	local error=0
 	if ! which git >/dev/null; then
-		echo "git not installed"
-		return 1
+		echo "git not installed."
+		error=1
 	fi
-	if ! which xattr >/dev/null; then
-		echo "xattr not installed"
-		return 1
+	if ! which getfattr >/dev/null || ! which setfattr >/dev/null; then
+		echo "attr not installed."
+		error=1
+	fi
+	if [ $error -ne 0 ]; then
+		echo "Exiting"
+		exit $error
 	fi
 }
 
