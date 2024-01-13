@@ -21,8 +21,9 @@ function main() {
 	local list="$(get_list | sort)"
 	echo "Backup files:"
 	echo "$list"
-	echo -n "$list" | backup "$tmp"
-
+	if [ -n "$list" ]; then
+		echo "$list" | backup "$tmp"
+	fi
 	local status=$(git -C "$tmp" status -s)
 	if [[ -z "$status" ]]; then
 		exit
