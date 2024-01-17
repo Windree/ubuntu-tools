@@ -4,7 +4,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/modules/get_filesystem_usage.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_ram_usage.sh"
 
 function get_ext4() {
-    df --output=target --type ext4 | tail -n +2
+    df --output=target --type ext4 | sed 1d
 }
 
 function get_ram() {

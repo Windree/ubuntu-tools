@@ -14,7 +14,7 @@ function get_btrfs_subvolumes(){
 }
 
 function get_ext4(){
-    df --output=target --type ext4 | tail -n +2
+    df --output=target --type ext4 | sed 1d
 }
 
 get_btrfs_subvolumes | while read partition; do
