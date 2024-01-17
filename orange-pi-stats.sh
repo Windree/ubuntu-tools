@@ -1,37 +1,37 @@
 #!/bin/env bash
 set -Eeuo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/modules/get_local_partitions.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_filesystem_usage.sh"
-source "$(dirname "${BASH_SOURCE[0]}")/modules/get_memory_usage.sh"
-
-disk=0
-ram=0
-temperature=0
-
-for arg in "$@"; do
-    case $arg in
-    "disk") disk=1 ;;
-    "ram") ram=1 ;;
-    "temperature") temperature=1 ;;
-    esac
-done
+source "$(dirname "${BASH_SOURCE[0]}")/modules/get_ram_usage.sh"
 
 function get_ext4() {
     df --output=target --type ext4 | tail -n +2
 }
 
-if [ $disk -eq 1 ]; then
+function get_ram() {
+    echo "RAM usage:" $(get_ram_usage)
+}
+
+function get_storage() {
     get_ext4 | while read partition; do
-        echo "Disk usage $partition: $(get_filesystem_usage "$partition")"
+        echo "Storage usage $partition: $(get_filesystem_usage "$partition")"
     done
-fi
+}
 
-if [ $ram -eq 1 ]; then
-    echo "Memory usage:" $(get_memory_usage)
-fi
+function get_cpu_temperature() {
+    echo "CPU Temperature: $(sensors | grep -A3 -P '^cpu' | grep -P '^temp1:' | awk '{print $2}')"
+}
 
-if [ $temperature -eq 1 ]; then
-    echo "Temperature:"
-    echo "CPU: $(sensors | grep -A3 -P '^cpu' | grep -P '^temp1:' | awk '{print $2}')"
-    echo "HDD: $(smartctl --all /dev/sda | grep -F "Temperature_Celsius" | awk '{print "+"$10".0°C"}')"
-fi
+function get_hdd_temperature() {
+    find /dev/sd* -type b | grep -vP '\d$' | while read disk; do
+        echo "HDD temperature ($disk): $(smartctl --all "$disk" | grep -F "Temperature_Celsius" | awk '{print "+"$10".0°C"}')"
+    done
+}
+
+for arg in "$@"; do
+    case $arg in
+    "cpu_temperature") get_cpu_temperature ;;
+    "hdd_temperature") get_hdd_temperature ;;
+    "ram") get_ram ;;
+    "storage") get_storage ;;
+    esac
+done
