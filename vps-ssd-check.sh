@@ -1,9 +1,9 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 
 source "$(dirname "${BASH_SOURCE[0]}")/modules/exec_btrfs_scrub.sh"
 
-function get_partitions(){
+function get_partitions() {
     echo /
     echo /media/app
 }

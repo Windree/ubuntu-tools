@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_local_partitions.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_partition_usage.sh"
@@ -8,12 +8,11 @@ source "$(dirname "${BASH_SOURCE[0]}")/modules/get_ram_usage.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_swap_usage.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_git_uncommited.sh"
 
-
-function get_btrfs_subvolumes(){
+function get_btrfs_subvolumes() {
     true
 }
 
-function get_ext4(){
+function get_ext4() {
     df --output=target --type ext4 | sed 1d
 }
 
@@ -32,8 +31,7 @@ echo "Docker all/restarting: $(docker ps --format "{{.Names}}" | wc -l)/$(docker
 echo
 docker ps --format "{{.Status}}\t{{.Names}}s"
 echo
-echo "ufw status:" 
+echo "ufw status:"
 ufw status numbered
 echo
-echo "Uncomitted changes: $(get_git_uncommited "$HOME" | xargs) $(get_git_uncommited "/media/app" | xargs)" 
-
+echo "Uncomitted changes: $(get_git_uncommited "$HOME" | xargs) $(get_git_uncommited "/media/app" | xargs)"

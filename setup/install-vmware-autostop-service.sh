@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuxo pipefail
 cat <<EOF | sudo tee /etc/systemd/system/vmware-autostop.service
 [Unit]

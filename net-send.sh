@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 
 if [[ $1 =~ ^(tcp|udp)([46]*)://([^:]+):([[:digit:]]+)$ ]]; then

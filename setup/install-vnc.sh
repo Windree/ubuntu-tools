@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuxo pipefail
 apt install -y tightvncserver xfce4 xorg gnome-icon-theme dbus-x11 --no-install-recommends
 apt install -y pavucontrol

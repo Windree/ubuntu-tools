@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 source "${BASH_SOURCE[0]}.env"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_public_address.sh"

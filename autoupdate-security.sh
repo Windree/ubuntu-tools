@@ -1,7 +1,7 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 set -Eeuo pipefail
 function main() {
-  if ! sudo apt update 2> /dev/null > /dev/null; then
+  if ! sudo apt update 2>/dev/null >/dev/null; then
     echo "Faled to fetch updates"
     return
   fi
@@ -12,7 +12,7 @@ function main() {
     exit 0
   fi
   export NEEDRESTART_MODE=a
-  sudo apt upgrade -y 2> /dev/null && sudo apt autoremove -y  2> /dev/null && sudo reboot
+  sudo apt upgrade -y 2>/dev/null && sudo apt autoremove -y 2>/dev/null && sudo reboot
 }
 
 main
