@@ -9,7 +9,7 @@ function main() {
     local samba_share=$3
 
     mount -t cifs \
-        -o credentials=$4,ro,noexec,cache=strict,uid=0,noforceuid,gid=0,noforcegid,iocharset=utf8,nocase,echo_interval=5 \
+        -o credentials=$4,rw,noexec,cache=strict,uid=0,noforceuid,gid=0,noforcegid,iocharset=utf8,nocase,echo_interval=5 \
         "$samba_share" "$temp" || exit 1
     local source_path=
     local rsync_source=
