@@ -8,8 +8,8 @@ function main() {
     local ipv6=$(get_public_address "6")
     echo Updating ipv4
     update_address "$key_ipv4" "$ipv4"
-    echo Updating ipv6
-    update_address "$key_ipv6" "$ipv6"
+    # echo Updating ipv6
+    # update_address "$key_ipv6" "$ipv6"
 }
 
 function update_address() {
