@@ -34,11 +34,10 @@ function main() {
         arguments+=("--files-from="$files"")
         (cd "$rsync_source" && find "." -type f) | shuf | head -n $5 >"$files" || exit 1
     fi
-    rsync --verbose --recursive --times --partial "${arguments[@]}" "$rsync_source" "$rsync_target" || exit 1
+    rsync --recursive --times --partial --out-format="%n" "${arguments[@]}" "$rsync_source" "$rsync_target" 2>/dev/null || exit 1
 }
 
 function cleanup() {
-    echo "$temp"
     while mountpoint -q "$temp"; do
         umount "$temp"
     done
