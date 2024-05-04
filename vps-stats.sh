@@ -9,7 +9,9 @@ source "$(dirname "${BASH_SOURCE[0]}")/modules/get_swap_usage.sh"
 source "$(dirname "${BASH_SOURCE[0]}")/modules/get_git_uncommited.sh"
 
 function get_btrfs_subvolumes() {
-    true
+    echo "/"
+    echo "/app"
+    echo "/data"
 }
 
 function get_ext4() {
