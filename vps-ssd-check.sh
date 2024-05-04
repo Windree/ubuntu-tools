@@ -5,7 +5,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/modules/exec_btrfs_scrub.sh"
 
 function get_partitions() {
     echo /
-    echo /media/app
+    echo /app
 }
 
 get_partitions | while read partition; do

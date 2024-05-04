@@ -36,4 +36,4 @@ echo
 echo "ufw status:"
 ufw status numbered
 echo
-echo "Uncomitted changes: $(get_git_uncommited "$HOME" | xargs) $(get_git_uncommited "/media/app" | xargs)"
+echo "Uncomitted changes: $(get_git_uncommited "$HOME" | xargs) $(get_git_uncommited "/app" | xargs)"
