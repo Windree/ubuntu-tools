@@ -34,7 +34,7 @@ function main() {
         arguments+=("--files-from="$files"")
         (cd "$rsync_source" && find "." -type f 2>/dev/null) | shuf | head -n $5 >"$files" || true
     fi
-    rsync --recursive --times --partial --out-format="%n" --delete-during --backup --exclude='$RECYCLE.BIN' --exclude='System Volume Information' --exclude=".recycle/" --backup-dir=".recycle/$(date +%Y%m%d-%H%M%S)/" "${arguments[@]}" "$rsync_source" "$rsync_target" 2>/dev/null || exit 1
+    rsync --recursive --times --bwlimit=10240 --partial --out-format="%n" --delete-during --backup --exclude='$RECYCLE.BIN' --exclude='System Volume Information' --exclude=".recycle/" --backup-dir=".recycle/$(date +%Y%m%d-%H%M%S)/" "${arguments[@]}" "$rsync_source" "$rsync_target" 2>/dev/null || exit 1
 }
 
 function cleanup() {
