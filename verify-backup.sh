@@ -46,4 +46,13 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
+if [ ! -d "$1" ]; then
+    echo "[backup directory] not found"
+    exit 1
+fi
+
+if [ ! -d "$2" ]; then
+    echo "[data directory] not found"
+    exit 1
+fi
 main $@
