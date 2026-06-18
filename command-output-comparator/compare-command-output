@@ -1,0 +1,40 @@
+#!/usr/bin/env fish
+
+# Проверяем, что команда передана
+if test (count $argv) -eq 0
+    echo "Error: No command specified."
+    echo "Usage: diffcmd <command> [arguments]"
+    exit 1
+end
+
+# Объединяем аргументы в одну строку команды
+set -l cmd_string "$argv"
+
+# Генерируем MD5-хеш (оптимизировано под Linux md5sum)
+set -l cmd_hash (echo -n "$cmd_string" | md5sum | cut -d' ' -f1)
+
+set -l cache_dir "$HOME/.cache/diffcmd"
+set -l prev_file "$cache_dir/$cmd_hash.cache"
+set -l current_file (mktemp)
+
+# Создаем директорию кэша, если её нет
+mkdir -p $cache_dir
+
+# Выполняем команду и пишем вывод во временный файл
+eval $cmd_string > $current_file
+
+# Сравниваем с предыдущим выводом
+if test -f $prev_file
+    if diff -q $current_file $prev_file > /dev/null
+        echo "🎉   Output matches the previous run exactly."
+    else
+        echo "⚠️  Differences detected since the last run:"
+        echo "----------------------------------------"
+        diff -u0 $prev_file $current_file  | tail -n +4
+    end
+else
+    echo "ℹ️  First time running this command. Output saved to $cmd_hash.cache"
+end
+
+# Обновляем кэш для следующего запуска
+mv $current_file $prev_file
