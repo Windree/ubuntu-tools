@@ -1,0 +1,71 @@
+#!/usr/bin/fish
+
+# Описание поддерживаемых флагов
+# 'e/exclude-file=' означает, что параметр обязателен для самого флага
+set -l options 'e/exclude-file='
+
+# Встроенный парсинг аргументов Fish
+argparse $options -- $argv
+or exit 1
+
+# Инициализируем переменные пустыми значениями
+set -l EXCLUDE_FILE ""
+set -l TARGET_DIR ""
+
+# 1. Проверяем и извлекаем обязательный флаг --exclude-file / -e
+if set -q _flag_exclude_file
+    set EXCLUDE_FILE $_flag_exclude_file
+else
+    echo "Ошибка: Параметр --exclude-file (-e) является обязательным."
+    echo "Использование: ./scan-files.fish --exclude-file <файл> <директория>"
+    exit 1
+end
+
+# 2. Проверяем и извлекаем обязательный позиционный аргумент (директорию)
+if test (count $argv) -gt 0
+    set TARGET_DIR $argv[1]
+else
+    echo "Ошибка: Целевая директория для сканирования не указана."
+    echo "Использование: ./scan-files.fish --exclude-file <файл> <директория>"
+    exit 1
+end
+
+# Верификация: существует ли указанный файл исключений
+if not test -f "$EXCLUDE_FILE"
+    echo "Ошибка: Файл исключений '$EXCLUDE_FILE' не найден."
+    exit 1
+end
+
+# Верификация: существует ли указанная директория
+if not test -d "$TARGET_DIR"
+    echo "Ошибка: Директория '$TARGET_DIR' не существует."
+    exit 1
+end
+
+# Динамическая сборка списка исключений для команды find
+set -l PRUNE_ARGS
+set -l first true
+
+for line in (cat "$EXCLUDE_FILE")
+    # Пропускаем пустые строки и комментарии (#)
+    if test -z (string trim "$line"); or string match -q "#*" "$line"
+        continue
+    end
+
+    # Добавляем оператор -o (OR) между аргументами исключений
+    if test "$first" = "true"
+        set first false
+    else
+        set PRUNE_ARGS $PRUNE_ARGS "-o"
+    end
+
+    # Добавляем путь папки для исключения
+    set PRUNE_ARGS $PRUNE_ARGS "-path" "$line"
+end
+
+# Запуск поиска и сбора метаданных файлов
+find "$TARGET_DIR" \
+    \( $PRUNE_ARGS \) -prune \
+    -o -type f \
+    -exec stat --printf="%n | %U | %G | %A | %y | " '{}' \; \
+    -exec sh -c 'md5sum "$1" | cut -d" " -f1' _ '{}' \;
