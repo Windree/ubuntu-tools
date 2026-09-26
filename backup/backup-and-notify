@@ -1,0 +1,18 @@
+#!/usr/bin/env fish
+# set -g fish_trace on
+
+set -g app $argv[1]
+set -g backup_root $argv[2]
+set -g app_name $argv[3]
+set -g host_name $argv[4]
+set -g script_dir (status dirname)
+
+begin
+    "$script_dir/backup-app" $app $backup_root && echo -e '\a'
+end 2>&1 | tee /dev/tty | aha | /app/mutt/app.sh \
+    --success-phrase (echo -e '\a') \
+    --from "dragon.windree@gmail.com" \
+    --from-name "$host_name - App Backup" \
+    --content-type text/html \
+    --subject "$app_name" \
+    windree@dragonsoul.com

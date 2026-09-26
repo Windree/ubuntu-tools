@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+/app/dar/darw create \
+  "$2/$1" \
+  "/app/$1" \
+  --prune "*/.git" --slice 1G --delta sig --compression=zstd:5
