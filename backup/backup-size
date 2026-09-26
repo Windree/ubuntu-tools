@@ -1,0 +1,14 @@
+#!/usr/bin/env fish
+# set -g fish_trace on
+
+find "$argv[1]" -mindepth 2 -maxdepth 2 -type f  -newermt "$argv[2]" -printf "%h %s\n" | \
+awk '{ split($1, parts, "/"); dir_name = parts[length(parts)-1] "/"  parts[length(parts)]; if(dir_name == "") dir_name = "/"; dir[dir_name]+=$2 } END {for (d in dir) printf "%s %s\n", d, dir[d]}' 2>&1 | \
+tee /dev/tty | aha | \
+/app/mutt/app.sh \
+    --from "dragon.windree@gmail.com" \
+    --from-name "$argv[3] - Backup Stats" \
+    --content-type text/html \
+    --subject "Stats" \
+    windree@dragonsoul.com
+
+
