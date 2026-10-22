@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+case "$1" in
+  pre)
+    echo "Disable read-only filesystem mode"
+    mount -o remount,rw / && \
+    mount -o remount,rw /boot && \
+    mount -o remount,rw /boot/efi && \
+    exit 0
+    exit 1
+  ;;
+  post)
+    i=60
+    while [ "$i" -ge 0 ]; do
+      printf "Reboot in read-only filesystem mode in %d seconds\n" "$i"
+      i=$((i - 1))
+      sleep 1
+    done
+    systemctl reboot -i
+  ;;
+  *)
+    echo "Usage: $0 pre|post"
+  ;;
+esac

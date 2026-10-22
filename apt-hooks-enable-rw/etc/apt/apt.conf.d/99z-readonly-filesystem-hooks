@@ -1,0 +1,6 @@
+DPkg::Pre-Invoke {
+  "if [ -x /usr/local/bin/apt-readonly-filesystem-hook ]; then /usr/local/bin/apt-readonly-filesystem-hook pre;  fi";
+};
+DPkg::Post-Invoke {
+  "if [ -x /usr/local/bin/apt-readonly-filesystem-hook ]; then /usr/local/bin/apt-readonly-filesystem-hook post; fi";
+};
