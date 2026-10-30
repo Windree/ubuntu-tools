@@ -1,9 +1,0 @@
-#!/usr/bin/env sh
-cp ./usr/local/bin/apt-readonly-filesystem-hook /usr/local/bin/ && \
-chown root:root /usr/local/bin/apt-readonly-filesystem-hook && \
-chmod 0755 /usr/local/bin/apt-readonly-filesystem-hook && \
-cp ./etc/apt/apt.conf.d/99z-readonly-filesystem-hooks /etc/apt/apt.conf.d/ && \
-chown root:root /etc/apt/apt.conf.d/99z-readonly-filesystem-hooks && \
-chmod 0755 /etc/apt/apt.conf.d/99z-readonly-filesystem-hooks && \
-echo "Complete" || \
-echo "Error"
