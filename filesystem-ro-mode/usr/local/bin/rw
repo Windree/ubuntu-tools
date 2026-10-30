@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
-sudo /usr/local/bin/apt-readonly-filesystem-hook pre
+sudo /usr/local/bin/apt-readonly-filesystem-hook pre && \
+echo "OK" >&2 || \
+echo "Failed" >&2
