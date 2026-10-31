@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
+error=0
+
+cloud_init_config=/etc/ssh/sshd_config.d/50-cloud-init.conf
+sshd_config=etc/ssh/sshd_config.d/00-disable-password-authentication.conf
+
+if [ -f "$cloud_init_config" ]; then
+    rm "$cloud_init_config" || \
+    error=1
+fi
+
+cp "$SCRIPT_DIR/$sshd_config" "/$sshd_config" && \
+chown root:root "/$sshd_config" && \
+chmod 644 "/$sshd_config" || \
+error=1
+
+if [ $error -ne 0 ]; then
+    printf 'Failed\n'
+    exit 1
+fi
+
+printf 'Successful'
+exit 0
