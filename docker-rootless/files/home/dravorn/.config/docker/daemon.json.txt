@@ -1,0 +1,6 @@
+!DOCKER_ROOTLESS!
+
+If using a custom Docker daemon configuration: You can explicitly force your containers to use a DNSSEC-capable resolver by modifying your host's /etc/docker/daemon.json file:json
+{
+  "dns": ["1.1.1.1", "8.8.8.8"]
+}

@@ -1,0 +1,14 @@
+{
+  "rootless": true,
+  "log-driver": "json-file",
+  "dns": ["1.1.1.1", "8.8.8.8"],
+  "data-root": "/data/docker-data",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "3"
+  },
+  "ipv6": true,
+  "fixed-cidr-v6": "fd00::/80",
+  "ip6tables": true,
+  "experimental": true
+}
