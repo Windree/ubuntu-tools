@@ -1,12 +1,14 @@
 #!/usr/bin/env sh
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+
 case "$1" in
   pre)
-    echo "Disable read-only filesystem mode"
-    mount -o remount,rw / && \
-    mount -o remount,rw /boot/efi && \
+    if ! "$SCRIPT_DIR/fs-manager" switch-rw; then
+      echo "ERROR: Failed to switch all filesystem to read-write mode before installation!"
+      exit 1
+    fi
     exit 0
-    exit 1
   ;;
   post)
     i=60
@@ -19,5 +21,7 @@ case "$1" in
   ;;
   *)
     echo "Usage: $0 pre|post"
+    exit 1
   ;;
 esac
+exit 0

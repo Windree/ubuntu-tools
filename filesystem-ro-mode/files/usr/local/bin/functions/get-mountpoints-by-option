@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+get_mountpoints_by_option() {
+    if [ "$#" -ne 1 ]; then
+        printf 'ERROR: get_mountpoints_by_option(): The function accept one argument only\n' $mountpoint >&2
+        return 1
+    fi
+    option="$1"
+    output=$(lsblk -no MOUNTPOINTS)
+    while IFS= read -r mountpoint; do
+      if findmnt -no OPTIONS "$mountpoint" | xargs -n 1 printf ',%s,\n' | grep -qF ",$option,"; then
+          printf '%s\n' $mountpoint
+      fi
+  done <<EOF
+$output
+EOF
+}

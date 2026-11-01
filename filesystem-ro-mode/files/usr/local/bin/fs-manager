@@ -1,0 +1,54 @@
+#!/usr/bin/env sh
+
+
+
+
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+. "$SCRIPT_DIR/functions/get-mountpoints-by-option"
+
+
+switch_rw() {
+  error=0
+  output=$(get_mountpoints_by_option "$1" | grep -E '^/.*')
+  [ -z "$output" ] && exit 0
+  while IFS= read -r mountpoint; do
+      mount -o remount,rw "$mountpoint" || error=1
+  done <<EOF
+$output
+EOF
+  [ $error -ne 0 ] && return 1
+  return 0
+}
+
+status() {
+  output=$(get_mountpoints_by_option "ro" | grep -E '^/.*')
+  if [ -n "$output" ]; then
+    printf "RO\n%s\n" "$output"
+  fi
+  output=$(get_mountpoints_by_option "rw" | grep -E '^/.*')
+  if [ -n "$output" ]; then
+    printf "RW\n%s\n" "$output"
+  fi
+}
+
+case "$1" in
+  switch-rw)
+    shift
+    switch_rw ro || printf 'ERROR: Failed to remount all filesystems to read-write mode\n' >&2 && exit 1
+    exit 0
+  ;;
+  status)
+    shift
+    status || printf 'ERROR: Failed to get all systems status\n' >&2 && exit 1
+    exit 0
+  ;;
+  *)
+    echo "Usage: $0 switch-rw|status"
+    exit 1
+  ;;
+esac
+
+exit 0
+
+
+
