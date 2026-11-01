@@ -21,5 +21,5 @@ if [ $error -ne 0 ]; then
     exit 1
 fi
 
-printf 'Successful'
+printf 'Successful\n'
 exit 0
