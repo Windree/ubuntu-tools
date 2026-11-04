@@ -81,3 +81,10 @@ services:
      - ./config:/config
      - ./assets:/assets
 ```
+
+## VNC
+```sh
+DISPLAY=:0 xrandr --size 1920x1080
+
+x11vnc -display :0 -forever -nopw -passwd part
+```
