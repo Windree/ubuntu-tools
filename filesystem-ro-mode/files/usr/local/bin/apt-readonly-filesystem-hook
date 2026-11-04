@@ -1,27 +1,35 @@
-#!/usr/bin/env sh
+#!/usr/bin/env -S fish --no-config
+#!tags: #apt #ro-filesystem
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
+source "$SCRIPT_DIR/functions/common"
 
-case "$1" in
-  pre)
-    if ! "$SCRIPT_DIR/fs-manager" switch-rw; then
-      echo "ERROR: Failed to switch all filesystem to read-write mode before installation!"
-      exit 1
-    fi
-    exit 0
-  ;;
-  post)
-    i=60
-    while [ "$i" -ge 0 ]; do
-      printf "Reboot to read-only filesystem mode in %d seconds\n" "$i"
-      i=$((i - 1))
-      sleep 1
-    done
-    systemctl reboot -i
-  ;;
-  *)
-    echo "Usage: $0 pre|post"
-    exit 1
-  ;;
-esac
+# Switch replaces the classic case syntax
+switch "$argv[1]"
+    case pre
+        # Run the command directly in the condition. 
+        # If it returns a non-zero exit status, the block triggers.
+        if not "$SCRIPT_DIR/fs-manager" enable-rw
+          log_error "Failed to switch all filesystem to read-write mode before installation!"
+          exit 1
+        end
+        log_info "Read-only protection disabled. Continue installation."
+
+    case post
+        set -l i 60
+        # In Fish, while loops evaluate standard commands or expressions using 'test'
+        while test $i -ge 0
+          log_info "Reboot to read-only filesystem mode in %d seconds" "$i"
+          set i (math "$i - 1") # Use native 'math' for math calculations
+          sleep 1
+        end
+        log_info "Rebooting"
+        systemctl reboot -i
+
+    case '*'
+        # Fish uses explicit quotes around the wildcard asterisk for default cases
+        echo "Usage: $0 pre|post"
+        exit 1
+end
+
 exit 0

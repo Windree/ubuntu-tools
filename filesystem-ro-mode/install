@@ -2,13 +2,13 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 error=0
 
-cp -r "$SCRIPT_DIR/files"/* / || error=1
+cp -vr "$SCRIPT_DIR/files"/* / || error=1
 
 output=$(cd "$SCRIPT_DIR/files" && find etc -type f)
 [ -z "$output" ] && error=1
 while IFS= read -r file; do
-    chown root:root "/$file" && \
-    chmod 0644 "/$file" || \
+    chown -v root:root "/$file" && \
+    chmod -v 0644 "/$file" || \
     error=1
 done <<EOF
 $output
@@ -17,8 +17,8 @@ EOF
 output=$(cd "$SCRIPT_DIR/files" && find usr -type f)
 [ -z "$output" ] && error=1
 while IFS= read -r file; do
-    chown root:root "/$file" && \
-    chmod 0755 "/$file" || \
+    chown -v root:root "/$file" && \
+    chmod -v 0755 "/$file" || \
     error=1
 done <<EOF
 $output

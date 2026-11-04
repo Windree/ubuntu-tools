@@ -1,54 +1,91 @@
-#!/usr/bin/env sh
+#!/usr/bin/env -S fish --no-config
+# !tags: #ro-filesystem
 
 
+set -l action $argv[1]
+set argv $argv[2..]
+
+set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
+
+source "$SCRIPT_DIR/functions/common"
+source "$SCRIPT_DIR/functions/filter-mountpoint"
+source "$SCRIPT_DIR/functions/get-disks-mountpoints"
+
+set -g msg_failed_to_get_ro_info "Failed to get read-only mounted info"
+set -g msg_failed_to_get_rw_info "Failed to get read-write mounted info"
+set -g msg_nothing_to_remount "No read-only filesystems found"
+set -g msg_failed_to_remount "Failed to remount %s\nDetails: %s"
+function enable_rw -d "Remount ro-only filesystems to read-write"
+    set -l error 0
+
+    set -l ro_output (get_disks_mountpoints | filter_mountpoint option ro)
+    set -l statuses $pipestatus
+    if test -n "$(string match -r '[^0]' $statuses)"
+      set error 1
+      log_error $msg_failed_to_get_ro_info >&2
+    end
+
+    if test -z "$ro_output"
+      log_warning $msg_nothing_to_remount >&2
+    end
+
+    for mountpoint in $ro_output
+        set -l mount_err (mount -o remount,rw $mountpoint 2>&1)
+        set -l statuses $pipestatus
+        if test -n "$(string match -r '[^0]' $statuses)"
+            set error 1
+            log_error $msg_failed_to_remount "$mountpoint" "$mount_err" >&2
+        end
+    end
+
+    if test $error -ne 0
+        return 1
+    end
+    return 0
+end
+
+function get_status -d "Show mount points status"
+    set -l error 0
+    set -l ro_output (get_disks_mountpoints | filter_mountpoint option ro | xargs -r -L 1 printf 'ro %s\n')
+    set -l statuses $pipestatus
+    if test -n "$(string match -r '[^0]' $statuses)"
+      set error 1
+      log_error $msg_failed_to_get_ro_info >&2
+    end
+    
+    set -l rw_output (get_disks_mountpoints | filter_mountpoint option rw | xargs -r -L 1 printf 'rw %s\n')
+    set -l statuses $pipestatus
+    if test -n "$(string match -r '[^0]' $statuses)"
+      set error 1
+      log_error $msg_failed_to_get_rw_info >&2
+    end
+
+    test -n "$ro_output" && printf '%s\n' $ro_output
+    test -n "$rw_output" && printf '%s\n' $rw_output
+
+    if test $error -ne 0
+        return 1
+    end
+    return 0
+end
 
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-. "$SCRIPT_DIR/functions/get-mountpoints-by-option"
-
-
-switch_rw() {
-  error=0
-  output=$(get_mountpoints_by_option "$1" | grep -E '^/.*')
-  [ -z "$output" ] && exit 0
-  while IFS= read -r mountpoint; do
-      mount -o remount,rw "$mountpoint" || error=1
-  done <<EOF
-$output
-EOF
-  [ $error -ne 0 ] && return 1
-  return 0
-}
-
-status() {
-  output=$(get_mountpoints_by_option "ro" | grep -E '^/.*')
-  if [ -n "$output" ]; then
-    printf "RO\n%s\n" "$output"
-  fi
-  output=$(get_mountpoints_by_option "rw" | grep -E '^/.*')
-  if [ -n "$output" ]; then
-    printf "RW\n%s\n" "$output"
-  fi
-}
-
-case "$1" in
-  switch-rw)
-    shift
-    switch_rw ro || printf 'ERROR: Failed to remount all filesystems to read-write mode\n' >&2 && exit 1
-    exit 0
-  ;;
-  status)
-    shift
-    status || printf 'ERROR: Failed to get all systems status\n' >&2 && exit 1
-    exit 0
-  ;;
-  *)
-    echo "Usage: $0 switch-rw|status"
-    exit 1
-  ;;
-esac
+switch "$action"
+    case enable-rw
+        if not enable_rw ro
+            log_error 'Failed to remount all block filesystems to read-write mode' >&2
+            exit 1
+        end
+       
+    case status
+        if not get_status $argv
+            log_error 'Failed to get systems status' >&2
+            exit 1
+        end
+        
+    case '*'
+        log_info "Usage: "(status current-command)" switch-rw|status"
+        exit 1
+end
 
 exit 0
-
-
-

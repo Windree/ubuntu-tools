@@ -1,0 +1,28 @@
+#!/usr/bin/env fish
+# tags: #ro-filesystem
+set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
+
+source "$SCRIPT_DIR/common"
+
+function filter_mountpoint -d "Filter passed mountpoints by criteria"
+    set -l error 0
+    set -l msg_function_name "filter_mountpoint"
+
+    if isatty stdin
+        log_error "%s(): This function requires piped input.\n" $msg_function_name >&2
+        return 1
+    end
+
+    set -l criteria $argv[1]
+    set -l option $argv[2]
+    switch $criteria
+        case option
+        case '*'
+            log_error "%s(): Unknown option(1) '%s'.\n" $msg_function_name $key >&2
+    end
+
+    while read -l mountpoint
+        findmnt $mountpoint -rno TARGET -O $option
+    end
+    return 0
+end

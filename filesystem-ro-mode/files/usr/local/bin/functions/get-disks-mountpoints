@@ -1,0 +1,16 @@
+#!/usr/bin/env fish
+# tags: #ro-filesystem
+set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
+
+source "$SCRIPT_DIR/common"
+
+function get_disks_mountpoints -d "Gets list of disks mountpoints excluding system mountpoints"
+    set -l msg_function_name "get_block_devices"
+
+    set output (lsblk -no MOUNTPOINTS)
+    if test $status -ne 0
+        lof_error '%s(): Unable to get block devices list.\n' $msg_function_name >&2
+        return 1
+    end
+    printf "%s\n" $output | grep --color=never -E '^/'
+end

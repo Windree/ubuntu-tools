@@ -1,0 +1,73 @@
+#!/usr/bin/env fish
+# tags: #common
+
+# Helper function to check if the terminal supports color and formatting
+function _term_supports_formatting
+    # Check if either stdout OR stderr is a terminal, AND TERM is not dumb
+    if test "$TERM" != "dumb"
+        and begin
+            isatty stdout
+            or isatty stderr
+        end
+        return 0
+    else
+        return 1
+    end
+end
+
+function log_error
+    set -l template $argv[1]
+    set argv $argv[2..]
+    if _term_supports_formatting
+        # Bold Red text for errors
+        set_color -b black -o red
+        printf "❌  Error: $template" $argv
+        set_color normal
+        printf "\n"
+    else
+        printf "Error: $template\n" $argv
+    end
+end
+
+function log_warning
+    set -l template $argv[1]
+    set argv $argv[2..]
+    if _term_supports_formatting
+        # Bold Yellow/Orange text for warnings
+        set_color -o yellow
+        printf "⚠️  Warning: $template" $argv
+        set_color normal
+        printf "\n"
+    else
+        printf "Warning: $template\n" $argv
+    end
+end
+
+function log_success
+    set -l template $argv[1]
+    set argv $argv[2..]
+    if _term_supports_formatting
+        # Bold Green text for success
+        set_color -b black -o green
+        printf "✅  Success: $template" $argv
+        set_color normal
+        printf "\n"
+    else
+        printf "Success: $template\n" $argv
+    end
+end
+
+function log_info
+    set -l template $argv[1]
+    set argv $argv[2..]
+    if _term_supports_formatting
+        # Cyan text for info
+        set_color cyan
+        printf "ℹ️  Info: $template" $argv
+        set_color normal
+        printf "\n"
+    else
+        printf "Info: $template\n" $argv
+    end
+end
+
