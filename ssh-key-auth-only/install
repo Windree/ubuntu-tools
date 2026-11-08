@@ -11,9 +11,9 @@ if [ -f "$cloud_init_config" ]; then
     error=1
 fi
 
-cp "$SCRIPT_DIR/$sshd_config" "/$sshd_config" && \
-chown root:root "/$sshd_config" && \
-chmod 644 "/$sshd_config" || \
+cp -av "$SCRIPT_DIR/$sshd_config" "/$sshd_config" && \
+chown -v root:root "/$sshd_config" && \
+chmod -v 644 "/$sshd_config" || \
 error=1
 
 if [ $error -ne 0 ]; then
@@ -21,5 +21,5 @@ if [ $error -ne 0 ]; then
     exit 1
 fi
 
-printf 'Successful\n'
+printf 'Installed. Reboot or "sudo systemctl restart sshd" to apply changes.\n' >&2
 exit 0
