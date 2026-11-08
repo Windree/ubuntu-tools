@@ -5,6 +5,18 @@ error=0
 
 source="$SCRIPT_DIR/files/etc/sysctl.d"
 target="/etc/sysctl.d"
+
+
+systemctl disable --now docker.service docker.socket && \
+systemctl mask  docker.service  docker.socket && \
+rm -vf /var/run/docker.sock && \
+rm -rfv /var/lib/docker/ || \
+error=1
+
+
+# Network driver
+apt install passt -y || error=1
+
 output=$(cd "$source" && find "./" -type f)
 [ -z "$output" ] && error=1
 while IFS= read -r file; do
@@ -16,6 +28,6 @@ done <<EOF
 $output
 EOF
 
-[ $error -ne 0 ] && printf 'ERROR: Failed to install\n' >&2 && exit 1
-echo "OK"
+[ $error -ne 0 ] && printf 'ERROR: Failed to install.\n' >&2 && exit 1
+echo "Installed."
 exit 0
