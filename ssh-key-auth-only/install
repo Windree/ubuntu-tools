@@ -7,7 +7,7 @@ cloud_init_config=/etc/ssh/sshd_config.d/50-cloud-init.conf
 sshd_config=etc/ssh/sshd_config.d/00-disable-password-authentication.conf
 
 if [ -f "$cloud_init_config" ]; then
-    rm "$cloud_init_config" || \
+    rm -v "$cloud_init_config" || \
     error=1
 fi
 
