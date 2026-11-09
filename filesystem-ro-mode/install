@@ -24,7 +24,9 @@ done <<EOF
 $output
 EOF
 
-update-grub || error=1
+if command -v update-grub >/dev/null 2>&1;then
+    update-grub || error=1
+fi
 
 [ $error -ne 0 ] && printf 'Failed to install\n' >&2 && exit 1
 echo "Installed. Reboot to apply changes."
