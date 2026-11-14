@@ -1,0 +1,101 @@
+#!/usr/bin/env fish
+# !tags: #sync-data #cifs
+set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
+source "$SCRIPT_DIR/functions/log"
+
+set -g mounted false
+set -g mountpoint (mktemp -d)
+or exit $status
+
+function main
+    argparse 's/source=' 't/target=' 'c/credentials=' 'h/help' -- $argv
+    or begin
+        print_usage
+        return 1
+    end
+
+    if set -q _flag_help
+        print_usage
+        return 0
+    end
+
+    if not set -q _flag_source; or not set -q _flag_target; or not set -q _flag_credentials
+        log_error "--source, --target, and --credentials are all required." >&2
+        print_usage
+        return 1
+    end
+
+    set -l source_share "$_flag_source"
+    set -l target_dir "$_flag_target"
+    set -l credentials "$_flag_credentials"
+
+    log_info "Validating credentials file $credentials..."
+    if not test -f "$credentials"
+        log_error "Credentials file '$credentials' does not exist." >&2
+        return 1
+    end
+
+    log_info "Mounting CIFS share $source_share to $mountpoint..."
+    while not mount -t cifs "$source_share" "$mountpoint" -o credentials="$credentials",ro
+        log_error "Mount failed; retrying in 30 seconds..." >&2
+        sleep 30
+    end
+
+    set -g mounted true
+    log_info "Share mounted successfully."
+
+    log_info "Starting Rsync backup from $mountpoint to $target_dir..."
+    if ! rsync_files "$mountpoint" "$target_dir";
+        set -l rc $status
+        log_error "Rsync failed with exit code $rc."
+    end
+    log_success "Rsync backup completed successfully."
+end
+
+function rsync_files --argument-names source_dir target_dir
+    rsync -a --dry-run \
+        --progress \
+        --delete-during \
+        --exclude '$RECYCLE.BIN' \
+        --exclude "System Volume Information" \
+        --exclude ".backups" \
+        --backup --backup-dir="$target_dir/.backups/"(date -u -Idate) \
+        "$source_dir/" "$target_dir/"
+    or return $status
+end
+
+function print_usage
+    echo "Usage: "(status filename)" --source <cifs_share> --target <local_dir> --credentials <file>" >&2
+    echo "Example: "(status filename)" --source //10.22.0.20/share --target /media/data/kat --credentials ~/credentials/cifs/kat.conf" >&2
+end
+
+function cleanup --on-event fish_exit
+    if test "$mounted" != "true"
+        rmdir "$mountpoint" 2>/dev/null
+        return
+    end
+
+    log_info "Unmounting CIFS share from $mountpoint..."
+    set -l unmounted false
+    for attempt in (seq 1 10)
+        if umount "$mountpoint"
+            set unmounted true
+            break
+        end
+        log_warning "Unmount busy (attempt $attempt/10); retrying in 10 seconds..."
+        if test $attempt -lt 10
+            sleep 10
+        end
+    end
+
+    if test "$unmounted" != "true"
+        log_error "Error: Failed to unmount $mountpoint after 10 attempts; skipping directory removal." >&2
+        return 1
+    end
+
+    log_info "Removing temporary mount point $mountpoint..."
+    rmdir "$mountpoint" 2>/dev/null
+    log_info "Cleanup complete."
+end
+
+main $argv

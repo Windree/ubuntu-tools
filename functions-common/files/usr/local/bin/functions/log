@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# tags: #common
+# tags: #common-functions #functions #log
 
 # Helper function to check if the terminal supports color and formatting
 function _term_supports_formatting

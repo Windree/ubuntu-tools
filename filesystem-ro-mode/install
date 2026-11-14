@@ -2,24 +2,30 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 error=0
 
-cp -vr "$SCRIPT_DIR/files"/* / || error=1
+"$SCRIPT_DIR/../functions-common/install" || error=1
+
+rsync -ac --no-links --info=NAME --no-perms --no-owner --no-group "$SCRIPT_DIR/files/" / || error=1 || error=1
 
 output=$(cd "$SCRIPT_DIR/files" && find etc -type f)
 [ -z "$output" ] && error=1
 while IFS= read -r file; do
-    chown -v root:root "/$file" && \
-    chmod -v 0644 "/$file" || \
-    error=1
+    dir=$(dirname -- "/$file") \
+    && chown -v root:root "/$file" "$dir" \
+    && chmod -v 0644 "/$file" \
+    && chmod -v 0755 "$dir" \
+    || error=1
 done <<EOF
 $output
 EOF
 
-output=$(cd "$SCRIPT_DIR/files" && find usr -type f)
+output=$(cd "$SCRIPT_DIR/files" && find usr -type d)
 [ -z "$output" ] && error=1
 while IFS= read -r file; do
-    chown -v root:root "/$file" && \
-    chmod -v 0755 "/$file" || \
-    error=1
+    dir=$(dirname -- "/$file") \
+    && chown -v root:root "/$file" "$dir" \
+    && chmod -v 0755 "/$file" \
+    && chmod -v 0755 "$dir" \
+    || error=1
 done <<EOF
 $output
 EOF

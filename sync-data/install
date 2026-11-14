@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+error=0
+
+"$SCRIPT_DIR/../functions-common/install" || error=1
+
+rsync -ac --no-links --info=NAME --no-perms --no-owner --no-group "$SCRIPT_DIR/files/" / || error=1
+
+output=$(cd "$SCRIPT_DIR/files" && find usr -type f)
+[ -z "$output" ] && error=1
+while IFS= read -r file; do
+    dir=$(dirname -- "/$file") \
+    && chown -v root:root "/$file" "$dir" \
+    && chmod -v 0755 "/$file" \
+    && chmod -v 0755 "$dir" \
+    || error=1
+done <<EOF
+$output
+EOF
+
+[ $error -ne 0 ] && printf 'Failed to install\n' >&2 && exit 1
+echo "Sync data installed."
+exit 0

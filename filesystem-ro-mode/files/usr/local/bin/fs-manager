@@ -7,7 +7,7 @@ set argv $argv[2..]
 
 set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
 
-source "$SCRIPT_DIR/functions/common"
+source "$SCRIPT_DIR/functions/log"
 source "$SCRIPT_DIR/functions/filter-mountpoint"
 source "$SCRIPT_DIR/functions/get-disks-mountpoints"
 
