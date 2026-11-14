@@ -20,6 +20,11 @@ done <<EOF
 $output
 EOF
 
+loginctl enable-linger
+
 [ $error -ne 0 ] && printf 'ERROR: Failed to install\n' >&2 && exit 1
+echo ""
+echo "Run 'sudo loginctl enable-linger $USER' to enable run docker service on boot."
 echo "OK"
+
 exit 0
