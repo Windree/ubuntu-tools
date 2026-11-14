@@ -2,7 +2,7 @@
 #!tags: #apt #ro-filesystem
 
 set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
-source "$SCRIPT_DIR/functions/common"
+source "$SCRIPT_DIR/functions/log"
 
 # Switch replaces the classic case syntax
 switch "$argv[1]"
