@@ -1,18 +1,78 @@
 #!/usr/bin/env fish
 # set -g fish_trace on
 
-set -g app $argv[1]
-set -g backup_root $argv[2]
-set -g app_name $argv[3]
-set -g host_name $argv[4]
+set -g backup_base_dir "/media/backup"
+set -f log (mktemp)
+
+set -g source_dir $argv[1]
+set -g backup_dir $argv[2]
+set -g app_name (path basename $source_dir)
+set -g host_name (hostname)
 set -g script_dir (status dirname)
 
-begin
-    "$script_dir/backup-app" $app $backup_root && echo -e '\a'
-end 2>&1 | tee /dev/tty | aha | /app/mutt/app.sh \
-    --success-phrase (echo -e '\a') \
-    --from "dragon.windree@gmail.com" \
-    --from-name "$host_name - App Backup" \
-    --content-type text/html \
-    --subject "$app_name" \
-    windree@dragonsoul.com
+function main
+    begin
+        if backup 2>&1 | tee $log
+            echo -e '\a'
+        end
+    end 2>&1 \
+    | tee /dev/tty | aha | /app/mutt/app.sh \
+        --success-phrase (echo -e '\a') \
+        --from "dragon.windree@gmail.com" \
+        --from-name "$host_name - App Backup" \
+        --content-type text/html \
+        --subject "$app_name" \
+        windree@dragonsoul.com
+end
+
+function backup
+    begin
+        if mountpoint -q $backup_base_dir
+            sudo umount $backup_base_dir \
+            || return -1
+        end
+        sudo mount $backup_base_dir \
+        || return -2
+        cd $source_dir \
+        && pwd \
+        && rootlesskit /app/dar/darw create \
+            $backup_base_dir/$backup_dir \
+            "." \
+            --prune "*/.git" --slice 1G --delta sig --compression=zstd:5 \
+        || return -3
+        sudo umount $backup_base_dir
+    end
+end
+
+function cleanup
+    # Erase the fish_exit handler immediately so cleanup never runs twice
+    functions -e _on_exit
+
+    if set -q log; and test -n "$log"
+        rm -f "$log"
+    end
+
+    if mountpoint -q "$backup_base_dir"
+        sudo umount "$backup_base_dir"
+        or exit 1
+    end
+end
+
+function cleanup  --on-event fish_exit 
+    rm -f $log
+    if mountpoint -q $backup_base_dir
+        sudo umount $backup_base_dir
+        or exit 1
+    end
+end
+
+function _on_exit --on-event fish_exit
+    cleanup
+end
+
+function _on_signal --on-signal INT --on-signal TERM
+    cleanup
+    exit 1
+end
+
+main
