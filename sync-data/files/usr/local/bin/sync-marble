@@ -1,0 +1,67 @@
+#!/usr/bin/env fish
+# !tags: #sync-data #marble
+# set -g fish_trace 1
+
+set -g script_dir (status dirname)
+
+argparse 'h/help' 'ssh-key=' -- $argv
+or exit 1
+
+if set -q _flag_help
+    echo "Usage: "(status filename)" [--ssh-key <path>]"
+    exit 0
+end
+set -g ssh_key $_flag_ssh_key
+
+if not test -f "$ssh_key"
+    echo "Error: SSH key not found at '$ssh_key'" >&2
+    exit 1
+end
+
+set -g timestamp (date "+%Y-%m-%d %H:%M:%S %z")
+set -g four_weeks_ago (math (date +%s) - 4 \* 7 \* 24 \* 60 \* 60)
+
+set -g source_dir "root@10.22.0.4:/media/storage/files"
+set -g target_dir "/media/data/marble"
+
+set -g trash_dir_name '$Trash'
+set -g versions_dir_name ".deleted-versions"
+set -g versions_dir "$target_dir/$versions_dir_name"
+set -g version_dir "$versions_dir/$timestamp"
+
+rsync -e "ssh -i '$ssh_key'" \
+      -a --progress \
+      --exclude="$trash_dir_name" \
+      --exclude="$versions_dir_name" \
+      --delete-during \
+      --backup --backup-dir="$version_dir" \
+      "$source_dir/" "$target_dir/"
+set -l rc $status
+if test $rc -ne 0
+    echo "Sync: Sync failed!" >&2
+    exit 1
+end
+
+echo "Sync: Completed successfully."
+
+if not test -d "$versions_dir"
+    echo "Cleanup: Skipping. No versions."
+    exit 0
+end
+
+for dir in "$versions_dir"/*/
+    set -l dir_name (basename -- "$dir")
+    set -l dir_time (date -d "$dir_name" +%s 2>/dev/null)
+
+    if test $status -ne 0
+        echo "Cleanup: Skip directory '$dir_name'. The folder is not a date and time timestamp."
+        continue
+    end
+
+    if test "$dir_time" -lt "$four_weeks_ago"
+        echo "Cleanup: Deleting $dir."
+        rm -rf -- "$dir"
+        continue
+    end
+    echo "Cleanup: Preserving directory '$dir_name'."
+end
