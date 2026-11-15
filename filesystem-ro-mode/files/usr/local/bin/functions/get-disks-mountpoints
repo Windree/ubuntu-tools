@@ -2,7 +2,7 @@
 # tags: #ro-filesystem
 set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
 
-source "$SCRIPT_DIR/common"
+source "$SCRIPT_DIR/log"
 
 function get_disks_mountpoints -d "Gets list of disks mountpoints excluding system mountpoints"
     set -l msg_function_name "get_block_devices"
