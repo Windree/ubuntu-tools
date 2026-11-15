@@ -53,7 +53,7 @@ function main
 end
 
 function rsync_files --argument-names source_dir target_dir
-    rsync -a --dry-run \
+    rsync -a \
         --progress \
         --delete-during \
         --exclude '$RECYCLE.BIN' \
