@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env fish
 # !tags: #ro-filesystem #email
 findmnt  / -o OPTIONS -n | grep -qP '\brw\b' \
 && echo -n "" | /app/mutt/app.sh --success-phrase (echo -e '\a') --from "dragon.windree@gmail.com" --from-name "$(hostname) - Filesystem" --content-type text/plain --subject "RW /" windree@dragonsoul.com
