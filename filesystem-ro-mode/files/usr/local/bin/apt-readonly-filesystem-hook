@@ -7,9 +7,10 @@ source "$SCRIPT_DIR/functions/get-disks-mountpoints"
 source "$SCRIPT_DIR/functions/filter-mountpoint"
 
 # Delay between end of installation and reboot
-set -g reboot_after_install_minutes 1
+set -g reboot_after_install_sec 300
 
-set -g reboot_required_file /run/(basename (status filename)).require-restart
+set -g filename (basename (status filename))
+set -g reboot_required_file /run/$filename.require-restart
 
 switch "$argv[1]"
     case pre
@@ -25,7 +26,7 @@ switch "$argv[1]"
         if ! touch "$reboot_required_file"
             log_error 'Failed to set scheduled reboot flag!' >&2
         end
-        log_info 'System will reboot to read-only filesystem mode in %s minute(s) after the installation completed.' $reboot_after_install_minutes >&2
+        log_info 'System will reboot to read-only filesystem mode in %s second(s) after the installation completed.' $reboot_after_install_sec >&2
         exit 0
     case post
         if not test -f "$reboot_required_file"
@@ -42,11 +43,13 @@ switch "$argv[1]"
                 exit 0
             end
         end
-        log_info 'System will reboot to read-only filesystem mode in %s minute(s).' $reboot_after_install_minutes >&2
-        if not shutdown -r +$reboot_after_install_minutes "System will reboot to read-only filesystem mode."
+        set -l unit apt-hook-reboot
+        if not systemd-run --on-active="$reboot_after_install_sec" --unit="$unit" --description="Reboot to read-only filesystem after apt installation" systemctl reboot
             log_error 'Failed to schedule automatic system reboot!' >&2
             exit 1
         end
+        log_info 'System will reboot to read-only filesystem mode in %s second(s).' $reboot_after_install_sec >&2
+        log_info 'Run following command to stop: sudo systemctl stop %s.timer' $unit
         exit 0
     case '*'
         log_info "Usage: %s pre|post" (basename (status filename)) >&2
