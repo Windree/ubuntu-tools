@@ -3,33 +3,52 @@
 
 set -l SCRIPT_DIR (cd (dirname (status filename)); and pwd)
 source "$SCRIPT_DIR/functions/log"
+source "$SCRIPT_DIR/functions/get-disks-mountpoints"
+source "$SCRIPT_DIR/functions/filter-mountpoint"
 
-# Switch replaces the classic case syntax
+# Delay between end of installation and reboot
+set -g reboot_after_install_minutes 1
+
+set -g reboot_required_file /run/(basename (status filename)).require-restart
+
 switch "$argv[1]"
     case pre
-        # Run the command directly in the condition. 
-        # If it returns a non-zero exit status, the block triggers.
+        set -l ro_output (get_disks_mountpoints | filter_mountpoint option ro)
+        if test -z "$ro_output"
+            exit 0
+        end
         if not "$SCRIPT_DIR/fs-manager" enable-rw
-          log_error "Failed to switch all filesystem to read-write mode before installation!"
-          exit 1
+            log_error 'Failed to switch all filesystem to read-write mode before installation!' >&2
+            exit 1
         end
-        log_info "Read-only protection disabled. Continue installation."
-
+        log_info 'Read-only protection disabled. Continue installation.' >&2
+        if ! touch "$reboot_required_file"
+            log_error 'Failed to set scheduled reboot flag!' >&2
+        end
+        log_info 'System will reboot to read-only filesystem mode in %s minute(s) after the installation completed.' $reboot_after_install_minutes >&2
+        exit 0
     case post
-        set -l i 60
-        # In Fish, while loops evaluate standard commands or expressions using 'test'
-        while test $i -ge 0
-          log_info "Reboot to read-only filesystem mode in %d seconds" "$i"
-          set i (math "$i - 1") # Use native 'math' for math calculations
-          sleep 1
+        if not test -f "$reboot_required_file"
+            exit 0
         end
-        log_info "Rebooting"
-        systemctl reboot -i
-
+        rm -f "$reboot_required_file"
+        if test -r /dev/tty; and sh -c 'true < /dev/tty' 2>/dev/null
+            log_warning "Press 'c' within 10 seconds to cancel automatic reboot to read-only filesystem mode..." >/dev/tty
+            bash -c 'read -r -n 1 -t 10 k </dev/tty && [[ "$k" == [cC] ]]' 2>/dev/null
+            set -l cancel_status $status
+            printf '\n' >/dev/tty
+            if test $cancel_status -eq 0
+                log_warning "Reboot canceled by user." >&2
+                exit 0
+            end
+        end
+        log_info 'System will reboot to read-only filesystem mode in %s minute(s).' $reboot_after_install_minutes >&2
+        if not shutdown -r +$reboot_after_install_minutes "System will reboot to read-only filesystem mode."
+            log_error 'Failed to schedule automatic system reboot!' >&2
+            exit 1
+        end
+        exit 0
     case '*'
-        # Fish uses explicit quotes around the wildcard asterisk for default cases
-        echo "Usage: $0 pre|post"
+        log_info "Usage: %s pre|post" (basename (status filename)) >&2
         exit 1
 end
-
-exit 0
