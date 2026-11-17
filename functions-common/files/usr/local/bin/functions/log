@@ -1,73 +1,124 @@
 #!/usr/bin/env fish
 # tags: #common-functions #functions #log
 
-# Helper function to check if the terminal supports color and formatting
 function _term_supports_formatting
-    # Check if either stdout OR stderr is a terminal, AND TERM is not dumb
-    if test "$TERM" != "dumb"
-        and begin
-            isatty stdout
-            or isatty stderr
-        end
-        return 0
-    else
+    # 1. Fail immediately if TERM is empty or dumb
+    if test -z "$TERM" -o "$TERM" = "dumb"
         return 1
+    end
+
+    # 2. Check if stdout or stderr is attached to a terminal
+    if isatty stdout; or isatty stderr
+        return 0
+    end
+
+    return 1
+end
+
+
+function log --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 2
+        echo "Usage: "(status current-function)" <info|ok|warn(ing)|err(or)> <template> [args...]" >&2
+        return 1
+    end
+
+    set -l level $argv[1]
+    set -l argv $argv[2..-1]
+
+    switch $level
+        case info
+            log_info $argv
+        case ok success
+            log_ok $argv
+        case warn warning
+            log_warning $argv
+        case err error
+            log_error $argv
+        case '*'
+            log_message $argv
     end
 end
 
-function log_error
+function log_error --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 1
+        echo "Usage: "(status current-function)" <template> [args...]" >&2
+        return 1
+    end
     set -l template $argv[1]
     set argv $argv[2..]
     if _term_supports_formatting
         # Bold Red text for errors
-        set_color -b black -o red
-        printf "❌  Error: $template" $argv
-        set_color normal
-        printf "\n"
+        printf '%s❌ Error: ' (set_color -o red)
+        printf "%s$template" "" $argv
+        printf '%s\n' (set_color normal)
     else
         printf "Error: $template\n" $argv
     end
 end
 
-function log_warning
+function log_warning --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 1
+        echo "Usage: "(status current-function)" <template> [args...]" >&2
+        return 1
+    end
     set -l template $argv[1]
     set argv $argv[2..]
     if _term_supports_formatting
         # Bold Yellow/Orange text for warnings
-        set_color -o yellow
-        printf "⚠️  Warning: $template" $argv
-        set_color normal
-        printf "\n"
+        printf '%s⚠️  ' (set_color -o yellow)
+        printf "%s$template" "" $argv
+        printf '%s\n' (set_color normal)
     else
         printf "Warning: $template\n" $argv
     end
 end
 
-function log_success
+function log_ok --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 1
+        echo "Usage: "(status current-function)" <template> [args...]" >&2
+        return 1
+    end
     set -l template $argv[1]
     set argv $argv[2..]
     if _term_supports_formatting
         # Bold Green text for success
-        set_color -b black -o green
-        printf "✅  Success: $template" $argv
-        set_color normal
-        printf "\n"
+        printf '%s✅ ' (set_color -o green)
+        printf "%s$template" "" $argv
+        printf '%s\n' (set_color normal)
     else
         printf "Success: $template\n" $argv
     end
 end
 
-function log_info
+function log_info --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 1
+        echo "Usage: "(status current-function)" <template> [args...]" >&2
+        return 1
+    end
     set -l template $argv[1]
     set argv $argv[2..]
     if _term_supports_formatting
         # Cyan text for info
-        set_color cyan
-        printf "ℹ️  Info: $template" $argv
-        set_color normal
-        printf "\n"
+        printf '%sℹ️  ' (set_color -o cyan)
+        printf "%s$template" "" $argv
+        printf '%s\n' (set_color normal)
     else
         printf "Info: $template\n" $argv
     end
 end
 
+function log_message --description "Print a formatted log message with an icon"
+    if test (count $argv) -lt 1
+        echo "Usage: "(status current-function)" <template> [args...]" >&2
+        return 1
+    end
+    set -l template $argv[1]
+    set argv $argv[2..]
+    if _term_supports_formatting
+        printf '%s💬 ' (set_color -o brwhite)
+        printf "%s$template" "" $argv
+        printf '%s\n' (set_color normal)
+    else
+        printf "Log: $template\n" $argv
+    end
+end

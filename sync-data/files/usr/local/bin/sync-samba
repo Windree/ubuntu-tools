@@ -49,7 +49,7 @@ function main
         set -l rc $status
         log_error "Rsync failed with exit code $rc."
     end
-    log_success "Rsync backup completed successfully."
+    log_ok "Rsync backup completed successfully."
 end
 
 function rsync_files --argument-names source_dir target_dir
